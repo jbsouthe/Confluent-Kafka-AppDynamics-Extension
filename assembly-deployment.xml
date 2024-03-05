@@ -21,7 +21,7 @@
         </fileSet>
         <fileSet>
             <directory>target/lib</directory>
-            <outputDirectory>ConfluentMonitor/lib</outputDirectory>
+            <outputDirectory>ConfluentKafkaMonitor/lib</outputDirectory>
             <includes>
                 <include>*.jar</include>
             </includes>
@@ -35,7 +35,7 @@
     <files>
         <file>
             <source>ConfluentKafkaMonitorExtension-${pom.version}.jar</source>
-            <outputDirectory>ConfluentMonitor</outputDirectory>
+            <outputDirectory>ConfluentKafkaMonitor</outputDirectory>
             <destName>ConfluentKafkaMonitorExtension.jar</destName>
         </file>
     </files>

@@ -1,0 +1,23 @@
+<monitor>
+    <name>ConfluentMonitor</name>
+    <type>managed</type>
+    <description>Confluent Monitor</description>
+    <monitor-configuration></monitor-configuration>
+    <monitor-run-task>
+        <execution-style>periodic</execution-style>
+        <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+        <name>Confluent Monitor Run Task</name>
+        <display-name>Confluent Monitor Task</display-name>
+        <description>Confluent Monitor Task</description>
+        <type>java</type>
+        <execution-timeout-in-secs>60</execution-timeout-in-secs>
+        <task-arguments>
+            <argument name="ConfluentConfigFile" is-required="true" default-value="Confluent-Config-EXAMPLE.json" />
+        </task-arguments>
+        <java-task>
+            <classpath>ConfluentKafkaMonitorExtension.jar:lib</classpath>
+            <load-jars-in-classpath-dirs>true</load-jars-in-classpath-dirs>
+            <impl-class>com.cisco.josouthe.ConfluentMonitor</impl-class>
+        </java-task>
+    </monitor-run-task>
+</monitor>

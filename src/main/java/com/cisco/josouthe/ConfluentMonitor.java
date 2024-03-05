@@ -85,8 +85,6 @@ public class ConfluentMonitor extends AManagedMonitor {
     }
 
     private OkHttpClient client = null;
-    private static final Pattern METRIC_LINE_PATTERN = Pattern.compile("^(?<metricName>[a-zA-Z_][a-zA-Z0-9_]*)(?:\\{kafka_id=\"(?<kafkaId>[^\"]+)\",topic=\"(?<topic>[^\"]+)\"\\})\\s+(?<value>[-0-9.e+]+)\\s+(?<timestamp>[-0-9.e+]+)$\n");
-
 
     public List<Metric> getMetrics(String dataset, ConfluentEndpoint endpoint ) throws IOException {
         OkHttpClient client = null;
@@ -98,27 +96,40 @@ public class ConfluentMonitor extends AManagedMonitor {
             throw new IOException("No Such Algorithm Exception: "+ e.getLocalizedMessage());
         }
         String requestLine = String.format("%s/v2/metrics/%s/export?resource.kafka.id=%s", endpoint.url, dataset, endpoint.id);
-        logger.debug("Request: GET "+ requestLine);
         Request request = new Request.Builder().url( requestLine )
                 .method("GET", null)
-                .addHeader("Authorization", "Bearer "+ getApiToken(endpoint))
+                .addHeader("Authorization", "Basic "+ getApiToken(endpoint))
                 .addHeader("Content-Type", "application/openmetrics-text; version=1.0.0; charset=utf-8")
                 .build();
-        System.out.println("Request: "+ request);
+        logger.debug("Request: "+ request);
         Response response = client.newCall(request).execute();
         return parseResponseMetrics( endpoint, response.body().string() );
     }
 
+    private static final Pattern METRIC_LINE_PATTERN = Pattern.compile("^(?<metricName>[a-zA-Z_][a-zA-Z0-9_]*)\\{(?<extraDescription>.*)\\}\\s+(?<value>[-0-9.e+]+)\\s+(?<timestamp>\\d+)$");
+    private static final Pattern METRIC_DESCRIPTION_PATTERN = Pattern.compile("(?<name>[\\w+]+)=\"(?<value>[^\"]+)\"");
+
     private List<Metric> parseResponseMetrics (ConfluentEndpoint endpoint, String output) {
         List<Metric> metrics = new ArrayList<>();
         for( String line : output.split("\n")) {
+            logger.debug("line: "+ line);
             if( line.startsWith("#") || line.trim().isEmpty() ) continue;
             Matcher matcher = METRIC_LINE_PATTERN.matcher(line);
-            String metricName = matcher.group("metricName");
-            String kafkaId = matcher.group("kafkaId");
-            String topic = matcher.group("topic");
-            String value = matcher.group("value");
-            metrics.add(new Metric(metricName, endpoint.name, topic, value));
+            if( matcher.matches() ){
+                String metricName = matcher.group("metricName");
+                String extraDescription = matcher.group("extraDescription");
+                String metricPath = "";
+                if( extraDescription != null && extraDescription.length() > 0) {
+                    Matcher descriptionMatcher = METRIC_DESCRIPTION_PATTERN.matcher(extraDescription);
+                    while(descriptionMatcher.find()) {
+                        metricPath += descriptionMatcher.group("name") +"="+ descriptionMatcher.group("value") +"|";
+                    }
+                }
+                String value = matcher.group("value");
+                metrics.add(new Metric(metricName, endpoint.name, metricPath, value));
+            } else {
+                logger.warn("line does not match: "+ line);
+            }
         }
         return metrics;
     }

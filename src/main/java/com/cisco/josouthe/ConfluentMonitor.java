@@ -24,14 +24,20 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConfluentMonitor extends AManagedMonitor {
     private Logger logger = LogManager.getFormatterLogger();
     private String metricPrefix = "Custom Metrics|Confluent Kafka|";
+    private Set<String> topicSet = new HashSet<>();
+    private Set<String> kafkaIdSet = new HashSet<>();
+    private Map<String,Double> summationMap = new HashMap<>();
 
     public ConfluentEndpoint[] readConfluentConfiguration( String configFileName ) throws TaskExecutionException {
         ConfluentEndpoint[] confluentEndpoints = null;
@@ -67,18 +73,38 @@ public class ConfluentMonitor extends AManagedMonitor {
         );
 
         for( ConfluentEndpoint confluentEndpoint : confluentEndpoints ) {
-            for( String dataset : new String[] {"cloud", "cloud-custom"}) {
+            for( String dataset : new String[] {"cloud"}) {
                 try {
                     for( Metric metric : getMetrics(dataset, confluentEndpoint)) {
                         printMetricCurrent(metric);
                     }
+                    printMetricCurrent("Cluster Count", kafkaIdSet.size());
+                    printMetricCurrent("Topic Count", topicSet.size());
+                    for( String name : summationMap.keySet()) {
+                        printMetricCurrent(confluentEndpoint.name+"|"+"Total "+name, summationMap.get(name).longValue());
+                    }
+                    kafkaIdSet.clear();
+                    topicSet.clear();
+                    summationMap.clear();
                 } catch (IOException e) {
                     throw new TaskExecutionException("Exception in getMetrics: " + e);
                 }
             }
         }
+
+
         return null;
     }
+
+    public int getClusterCount() {
+        return kafkaIdSet.size();
+    }
+
+    public int getTopicCount() {
+        return topicSet.size();
+    }
+
+    public Map<String,Double> getSummationMap() { return summationMap; }
 
     private String getApiToken( ConfluentEndpoint endpoint) {
         return Base64.getEncoder().encodeToString(String.format("%s:%s", endpoint.apiKey, endpoint.apiSecret).getBytes(StandardCharsets.UTF_8));
@@ -122,16 +148,37 @@ public class ConfluentMonitor extends AManagedMonitor {
                 if( extraDescription != null && extraDescription.length() > 0) {
                     Matcher descriptionMatcher = METRIC_DESCRIPTION_PATTERN.matcher(extraDescription);
                     while(descriptionMatcher.find()) {
-                        metricPath += descriptionMatcher.group("name") +"="+ descriptionMatcher.group("value") +"|";
+                        String dName = descriptionMatcher.group("name");
+                        String dValue = descriptionMatcher.group("value");
+                        metricPath += dName +"="+ dValue +"|";
+                        switch (dName.toLowerCase()) {
+                            case "topic": {
+                                if( endpoint.ignoreHiddenTopics && dValue.startsWith("_") ) break;
+                                topicSet.add(dValue);
+                                break;
+                            }
+                            case "kafka_id": {
+                                kafkaIdSet.add(dValue);
+                                break;
+                            }
+                        }
                     }
                 }
-                String value = matcher.group("value");
-                metrics.add(new Metric(metricName, endpoint.name, metricPath, value));
+                String metricValue = matcher.group("value");
+                metrics.add(new Metric(metricName, endpoint.name, metricPath, metricValue));
+                addToSummation(metricName, metricValue);
             } else {
                 logger.warn("line does not match: "+ line);
             }
         }
         return metrics;
+    }
+
+    private void addToSummation(String name, String value) {
+        Double sum = summationMap.get(name);
+        if( sum == null ) sum = new Double(0);
+        sum += Double.valueOf(value);
+        summationMap.put(name, sum);
     }
 
     private OkHttpClient getTrustAllCertsClient() throws NoSuchAlgorithmException, KeyManagementException {

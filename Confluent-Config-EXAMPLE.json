@@ -4,6 +4,7 @@
     "name": "cluster_0",
     "url": "https://api.telemetry.confluent.cloud",
     "apiKey": "your key",
-    "apiSecret": "your secret"
+    "apiSecret": "your secret",
+    "ignoreHiddenTopics": true
   }
 ]

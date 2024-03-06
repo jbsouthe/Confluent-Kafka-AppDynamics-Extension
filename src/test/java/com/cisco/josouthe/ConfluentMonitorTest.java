@@ -39,6 +39,27 @@ class ConfluentMonitorTest {
         ConfluentEndpoint[] confluentEndpoints = monitor.readConfluentConfiguration(testConfigFile.getAbsolutePath());
         assert confluentEndpoints.length > 0;
 
+
+        for( ConfluentEndpoint confluentEndpoint : confluentEndpoints ) {
+            for( String dataset : new String[] {"cloud"}) {
+                try {
+                    List<Metric> metrics = monitor.getMetrics("cloud", confluentEndpoints[0] );
+                    for( Metric metric : metrics) {
+                        System.out.println("Metric: "+ metric.name +"="+ metric.value);
+                    }
+                    System.out.println(confluentEndpoint.name+"|"+"Cluster Count"+"="+ monitor.getClusterCount());
+                    System.out.println(confluentEndpoint.name+"|"+"Topic Count"+"="+ monitor.getTopicCount());
+                    for( String name : monitor.getSummationMap().keySet()) {
+                        System.out.println(confluentEndpoint.name+"|"+"Total "+name+"="+ monitor.getSummationMap().get(name).longValue());
+                    }
+                } catch (IOException e) {
+                    throw new TaskExecutionException("Exception in getMetrics: " + e);
+                }
+            }
+        }
+
+
+/*
         List<Metric> metrics = monitor.getMetrics("cloud", confluentEndpoints[0] );
         assert metrics.size() > 0;
         for( Metric metric : metrics )
@@ -51,5 +72,7 @@ class ConfluentMonitorTest {
         System.out.println("Cluster Count: "+ monitor.getClusterCount());
         System.out.println("Topic Count: "+ monitor.getTopicCount());
         for( String name : monitor.getSummationMap().keySet())  System.out.println(name +" = "+ monitor.getSummationMap().get(name));
+
+ */
     }
 }

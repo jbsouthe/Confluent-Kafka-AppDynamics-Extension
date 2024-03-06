@@ -78,8 +78,8 @@ public class ConfluentMonitor extends AManagedMonitor {
                     for( Metric metric : getMetrics(dataset, confluentEndpoint)) {
                         printMetricCurrent(metric);
                     }
-                    printMetricCurrent("Cluster Count", kafkaIdSet.size());
-                    printMetricCurrent("Topic Count", topicSet.size());
+                    printMetricCurrent(confluentEndpoint.name+"|"+"Cluster Count", kafkaIdSet.size());
+                    printMetricCurrent(confluentEndpoint.name+"|"+"Topic Count", topicSet.size());
                     for( String name : summationMap.keySet()) {
                         printMetricCurrent(confluentEndpoint.name+"|"+"Total "+name, summationMap.get(name).longValue());
                     }

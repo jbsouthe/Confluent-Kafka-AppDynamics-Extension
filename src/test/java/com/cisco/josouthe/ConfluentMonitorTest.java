@@ -39,7 +39,7 @@ class ConfluentMonitorTest {
         ConfluentEndpoint[] confluentEndpoints = monitor.readConfluentConfiguration(testConfigFile.getAbsolutePath());
         assert confluentEndpoints.length > 0;
 
-
+        int totalTopicCount = 0;
         for( ConfluentEndpoint confluentEndpoint : confluentEndpoints ) {
             for( String dataset : new String[] {"cloud"}) {
                 try {
@@ -49,6 +49,7 @@ class ConfluentMonitorTest {
                     }
                     System.out.println(confluentEndpoint.name+"|"+"Cluster Count"+"="+ monitor.getClusterCount());
                     System.out.println(confluentEndpoint.name+"|"+"Topic Count"+"="+ monitor.getTopicCount());
+                    totalTopicCount += monitor.getTopicCount();
                     for( String name : monitor.getSummationMap().keySet()) {
                         System.out.println(confluentEndpoint.name+"|"+"Total "+name+"="+ monitor.getSummationMap().get(name).longValue());
                     }
@@ -57,7 +58,8 @@ class ConfluentMonitorTest {
                 }
             }
         }
-
+        System.out.println("Cluster Count"+"="+ monitor.getClusterCount());
+        System.out.println("Topic Count"+"="+ totalTopicCount);
 
 /*
         List<Metric> metrics = monitor.getMetrics("cloud", confluentEndpoints[0] );

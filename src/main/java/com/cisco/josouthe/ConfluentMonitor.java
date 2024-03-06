@@ -72,18 +72,19 @@ public class ConfluentMonitor extends AManagedMonitor {
                 MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE
         );
 
+        int totalTopicCount = 0;
+
         for( ConfluentEndpoint confluentEndpoint : confluentEndpoints ) {
             for( String dataset : new String[] {"cloud"}) {
                 try {
                     for( Metric metric : getMetrics(dataset, confluentEndpoint)) {
                         printMetricCurrent(metric);
                     }
-                    printMetricCurrent(confluentEndpoint.name+"|"+"Cluster Count", kafkaIdSet.size());
                     printMetricCurrent(confluentEndpoint.name+"|"+"Topic Count", topicSet.size());
                     for( String name : summationMap.keySet()) {
                         printMetricCurrent(confluentEndpoint.name+"|"+"Total "+name, summationMap.get(name).longValue());
                     }
-                    kafkaIdSet.clear();
+                    totalTopicCount += topicSet.size();
                     topicSet.clear();
                     summationMap.clear();
                 } catch (IOException e) {
@@ -91,7 +92,8 @@ public class ConfluentMonitor extends AManagedMonitor {
                 }
             }
         }
-
+        printMetricCurrent("Cluster Count", kafkaIdSet.size());
+        printMetricCurrent("Topic Count", totalTopicCount);
 
         return null;
     }

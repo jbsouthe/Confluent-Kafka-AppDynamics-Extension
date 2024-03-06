@@ -9,6 +9,7 @@
             <outputDirectory>ConfluentKafkaMonitor</outputDirectory>
             <includes>
                 <include>README.md</include>
+                <include>doc_images/*</include>
                 <include>Changelog.md</include>
                 <include>LICENSE</include>
                 <include>NOTICE.txt</include>

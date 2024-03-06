@@ -31,4 +31,5 @@ The Confuence-Config-EXAMPLE.json looks like this:
 * ignoreHiddenTopics, simply ignores topics named starting with '_' in the summation metrics, but displays them individually
 
 once running, the metric browser should look like this, and within the tree are metrics Confluence makes available for monitoring:
+
 ![metric tree](doc_images/AppDMetricBrowser-Confluence.png)

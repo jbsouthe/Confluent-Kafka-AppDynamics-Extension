@@ -1,5 +1,7 @@
 # AppDynamics Confluent Kafka Machine Agent Extension
 
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/jbsouthe/Confluent-Kafka-AppDynamics-Extension)
+
 This extension adds the ability to monitor Confluence Kafka externally and create dashboards from that data
 
 ![ConfluentKafkaDashboardExample.jpg](doc_images/ConfluentKafkaDashboardExample.jpg)
